@@ -1,23 +1,68 @@
-import { Stack } from '@mantine/core';
+import { Alert, Card, Group, Stack, Text, Title } from '@mantine/core';
+import { FiAlertCircle } from 'react-icons/fi';
+import AssetTable from '@/components/home/AssetTable';
+import ColumnDetails from '@/components/home/ColumnDetails';
 import CornerRings from '@/components/home/CornerRings';
 import HeroSection from '@/components/home/HeroSection';
+import Highlights from '@/components/home/Highlights';
+import HowItWorks from '@/components/home/HowItWorks';
 import UploadDropzone from '@/components/home/UploadDropzone';
+import { useAssetImport } from '@/components/home/useAssetImport';
 import styles from '@/components/home/Home.module.css';
-import HowItWorks from './HowItWorks';
-import Highlights from './Highlights';
 
-const noop = () => undefined;
+const HomeIndex = () => {
+  const { loading, error, fileName, result, handleDrop, handleReject, clearError } = useAssetImport();
+  const hasRows = !!result && result.rows.length > 0;
 
-const HomeIndex = () => (
-  <>
-    <CornerRings />
-    <Stack gap="xl" className={styles.content}>
-      <HeroSection />
-      <UploadDropzone loading={false} fileName="" onDrop={noop} onReject={noop} />
-      <HowItWorks />
-      <Highlights />
-    </Stack>
-  </>
-);
+  return (
+    <>
+      <CornerRings />
+      <Stack gap={64} className={styles.content}>
+        <Stack gap="xl">
+          <HeroSection />
+          <UploadDropzone loading={loading} fileName={fileName} onDrop={handleDrop} onReject={handleReject} />
+          {error && (
+            <Alert color="red" icon={<FiAlertCircle />} withCloseButton onClose={clearError}>
+              {error}
+            </Alert>
+          )}
+        </Stack>
+
+        {hasRows && (
+          <Stack gap="lg">
+            <Card withBorder p="xl" radius="lg">
+              <Group justify="space-between" mb="sm">
+                <Title order={3}>Extracted assets</Title>
+                <Text c="dimmed" size="sm">
+                  {fileName} · {result.rows.length} rows · {result.sheets.length} sheet
+                  {result.sheets.length === 1 ? '' : 's'}
+                </Text>
+              </Group>
+              <AssetTable
+                rows={result.rows}
+                extraColumns={result.extraColumns}
+                multipleSheets={result.sheets.length > 1}
+              />
+            </Card>
+
+            <Card withBorder p='xl' radius="lg">
+              <Title order={3} mb="sm">
+                Column details
+              </Title>
+              <Stack gap="lg">
+                {result.sheets.map(sheet => (
+                  <ColumnDetails key={sheet.name} sheet={sheet} />
+                ))}
+              </Stack>
+            </Card>
+          </Stack>
+        )}
+
+        <HowItWorks />
+        <Highlights />
+      </Stack>
+    </>
+  );
+};
 
 export default HomeIndex;
