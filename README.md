@@ -1,19 +1,15 @@
-# Product Explore App
+# AssetLens
 
-A web app for discovering and browsing products. It is built with React, TypeScript and Mantine UI.
-
-> **Status:** early development. The app shell is in place: header, mobile menu, footer, light/dark theme and routing. Product browsing pages are not built yet.
+A web app for importing asset spreadsheets. Upload an `.xlsx`, `.xls` or `.csv` file and the app extracts asset type, manufacturer, model, serial number, CPU, RAM, storage and screen size, even when headers, column order or structure differ between files. Every other column is kept and shown alongside.
 
 ## Tech stack
 
 - **React 19** + **TypeScript**
 - **Vite 6** (SWC) for dev server and builds
-- **Mantine UI 9** for components and theming
-- **Tailwind CSS 4** for utility styles
-- **Redux Toolkit** + **RTK Query** for state and data fetching
-- **redux-persist** (encrypted) for persisted state
+- **Mantine 9** (core, dropzone) and **mantine-datatable** for UI and tables
+- **SheetJS (`xlsx`)** for Excel files and **csvtojson** for CSV files
+- **Tailwind CSS 4** for base styles
 - **React Router 7** for routing
-- **react-icons**, **dayjs**, **Embla Carousel**
 - **ESLint** + **Prettier**
 
 ## Getting started
@@ -25,30 +21,42 @@ npm install
 npm run dev
 ```
 
-The dev server runs at http://localhost:3000.
+The dev server runs at http://localhost:5173.
 
 ## Scripts
 
-| Command           | Description                                   |
-| ----------------- | --------------------------------------------- |
-| `npm run dev`     | Start the dev server                          |
-| `npm run build`   | Type-check and build to `build/`              |
-| `npm run preview` | Preview the production build locally          |
-| `npm run lint`    | Run ESLint                                    |
+| Command           | Description                          |
+| ----------------- | ------------------------------------ |
+| `npm run dev`     | Start the dev server                 |
+| `npm run build`   | Type-check and build to `build/`     |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint`    | Run ESLint                           |
+
+## How parsing works
+
+The parser lives in [`src/utils/assetParser`](src/utils/assetParser):
+
+1. Readers (`readers.ts`) turn a CSV or each workbook sheet into a raw grid of strings.
+2. The header row is located automatically (`headers.ts`), so title rows above the table are skipped.
+3. Columns are mapped to asset fields by header name; unrecognised headers are mapped from their values (`inference.ts`).
+4. Missing fields are filled from description-style text columns (`extractors.ts`).
+5. Columns that are not asset fields are kept as extra columns.
+
+The Column details section shows, per sheet, which source column was mapped to each field and how it was detected.
 
 ## Project structure
 
 ```
 src/
-├── assets/css/     Global styles and Tailwind setup
+├── assets/         Styles and images, with a central index.ts
 ├── common/         Shared pieces (Logo, ScrollToTop)
-├── components/     UI components (header, footer, modal, theme toggle)
+├── components/     UI components (header, footer, home, theme toggle)
+├── constants/      App name and shared constants
 ├── layouts/        Page layouts (MasterLayout)
 ├── pages/          Route pages
 ├── routes/         Router configuration
-├── services/       RTK Query API services
-├── store/          Redux store and persistence
 ├── theme/          Mantine theme and color palette
+├── utils/          Spreadsheet parsing (assetParser)
 └── App.tsx         App providers
 ```
 
@@ -60,17 +68,7 @@ src/
 | `@components/` | `src/components/` |
 | `@assets/`     | `src/assets/`     |
 | `@utils/`      | `src/utils/`      |
-| `@services/`   | `src/services/`   |
 
 ## Theming
 
-The theme lives in [`src/theme`](src/theme):
-
-- `primary`: violet, the main brand color (buttons, links, highlights).
-- `accent`: amber, for ratings, deals and badges.
-
-Mantine uses `primary` by default, so use `color="accent"` or `var(--mantine-color-accent-6)` when you need the accent. Users can switch between light and dark mode with the toggle in the header.
-
-## Notes
-
-- The redux-persist encryption key is hardcoded in `src/store/index.ts`. Move it into a `.env` file (for example `VITE_PERSIST_SECRET`) before deploying.
+The theme lives in [`src/theme`](src/theme). `primary` (violet) is the main brand color. Users can switch between light and dark mode with the toggle in the header.

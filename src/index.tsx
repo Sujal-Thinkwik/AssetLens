@@ -1,5 +1,7 @@
-import '@/assets/css/tailwind.css';
+import '@/assets/styles/tailwind.css';
 import '@mantine/core/styles.css';
+import '@mantine/dropzone/styles.css';
+import 'mantine-datatable/styles.css';
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';

@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite';
 import path from 'path';
 import react from '@vitejs/plugin-react-swc';
-import viteSvgr from 'vite-plugin-svgr';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [react(), viteSvgr(), tailwindcss()],
+  plugins: [react(), tailwindcss()],
   build: {
     outDir: 'build'
   },
@@ -14,11 +13,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@components': path.resolve(__dirname, './src/components'),
       '@assets': path.resolve(__dirname, './src/assets'),
-      '@utils': path.resolve(__dirname, './src/utils'),
-      '@services': path.resolve(__dirname, './src/services')
+      '@utils': path.resolve(__dirname, './src/utils')
     }
   },
   server: {
-    port: 3000
+    port: 5173
   }
 });
