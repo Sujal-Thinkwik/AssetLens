@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import HomeSkeleton from '@/components/home/HomeSkeleton';
+import HomeSkeleton from '@/components/home/home-skeleton';
 
 const HomeIndex = lazy(() => import('@/components/home'));
 

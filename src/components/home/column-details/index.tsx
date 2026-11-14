@@ -3,8 +3,8 @@ import { Badge, Group, Paper, Stack, Text, Tooltip } from '@mantine/core';
 import { DataTable, DataTableColumn } from 'mantine-datatable';
 import { FiAlertTriangle, FiMinus, FiType, FiZap } from 'react-icons/fi';
 import { ColumnDetail, SheetResult } from '@/utils/assetParser';
-import FieldCoverageGrid from '@/components/home/FieldCoverageGrid';
-import { METHOD_META, buildCoverage, fieldLabel } from '@/components/home/columnDetails.helpers';
+import FieldCoverageGrid from './FieldCoverageGrid';
+import { METHOD_META, buildCoverage, fieldLabel } from './columnDetails.helpers';
 
 const METHOD_ICON = {
   header: <FiType size={12} />,

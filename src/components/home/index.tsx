@@ -1,12 +1,12 @@
 import { Alert, Card, Group, Stack, Text, Title } from '@mantine/core';
 import { FiAlertCircle } from 'react-icons/fi';
-import AssetTable from '@/components/home/AssetTable';
-import ColumnDetails from '@/components/home/ColumnDetails';
-import CornerRings from '@/components/home/CornerRings';
-import HeroSection from '@/components/home/HeroSection';
-import Highlights from '@/components/home/Highlights';
-import HowItWorks from '@/components/home/HowItWorks';
-import UploadDropzone from '@/components/home/UploadDropzone';
+import AssetTable from '@/components/home/asset-table';
+import ColumnDetails from '@/components/home/column-details';
+import CornerRings from '@/components/home/corner-rings';
+import HeroSection from '@/components/home/hero-section';
+import Highlights from '@/components/home/highlights';
+import HowItWorks from '@/components/home/how-it-works';
+import UploadDropzone from '@/components/home/upload-dropzone';
 import { useAssetImport } from '@/components/home/useAssetImport';
 import styles from '@/components/home/Home.module.css';
 

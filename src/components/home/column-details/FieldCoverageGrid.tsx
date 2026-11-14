@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Group, Paper, SimpleGrid, Text, ThemeIcon } from '@mantine/core';
 import { FiCheck, FiMinus } from 'react-icons/fi';
-import { FieldCoverage } from '@/components/home/columnDetails.helpers';
+import { FieldCoverage } from './columnDetails.helpers';
 
 const FieldCoverageGrid = ({ coverage }: { coverage: FieldCoverage[] }) => (
   <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="xs">

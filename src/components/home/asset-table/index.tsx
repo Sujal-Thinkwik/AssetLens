@@ -6,7 +6,7 @@ import {
   DataTableSortStatus
 } from 'mantine-datatable';
 import { ASSET_FIELDS, AssetRow } from '@/utils/assetParser';
-import AssetTableToolbar from '@/components/home/AssetTableToolbar';
+import AssetTableToolbar from './AssetTableToolbar';
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZES,
@@ -15,7 +15,7 @@ import {
   extraKey,
   filterRecords,
   sortRecords
-} from '@/components/home/assetTable.helpers';
+} from './assetTable.helpers';
 
 interface Props {
   rows: AssetRow[];
