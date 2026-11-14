@@ -32,13 +32,11 @@
     "allowSyntheticDefaultImports": true,
 
     /* Extra */
-    "baseUrl": "./src",
-    "ignoreDeprecations": "6.0",
     "paths": {
-      "@/*": ["./*"],
-      "@components/*": ["src/components/*"],
-      "@assets/*": ["assets/*"],
-      "@utils/*": ["utils/*"]
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@utils/*": ["./src/utils/*"]
     }
   },
   "include": [
