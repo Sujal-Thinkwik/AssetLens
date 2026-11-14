@@ -1,6 +1,17 @@
 # AssetLens
 
-A web app for importing asset spreadsheets. Upload an `.xlsx`, `.xls` or `.csv` file and the app extracts asset type, manufacturer, model, serial number, CPU, RAM, storage and screen size, even when headers, column order or structure differ between files. Every other column is kept and shown alongside.
+A web app for importing asset spreadsheets. Upload an `.xlsx`, `.xls`, `.xlsm`, `.csv` or `.tsv` file (up to 20 MB, multiple sheets supported) and the app extracts asset type, manufacturer, model, serial number, CPU, RAM, storage and screen size, even when headers, column order or structure differ between files. Every other column is kept and shown alongside.
+
+Files are parsed entirely in the browser. Nothing is uploaded to a server and there is no login.
+
+## Features
+
+- Drag-and-drop or click-to-browse upload
+- Automatic header detection, column mapping and field extraction
+- Searchable, sortable, paginated table of the extracted assets
+- Column details per sheet showing how each field was detected
+- Light and dark themes
+- Responsive layout with a scroll-to-top button
 
 ## Tech stack
 
@@ -28,7 +39,7 @@ The dev server runs at http://localhost:5173.
 | Command           | Description                          |
 | ----------------- | ------------------------------------ |
 | `npm run dev`     | Start the dev server                 |
-| `npm run build`   | Type-check and build to `build/`     |
+| `npm run build`   | Type-check and build to `dist/`      |
 | `npm run preview` | Preview the production build locally |
 | `npm run lint`    | Run ESLint                           |
 
@@ -44,6 +55,20 @@ The parser lives in [`src/utils/assetParser`](src/utils/assetParser):
 
 The Column details section shows, per sheet, which source column was mapped to each field and how it was detected.
 
+To support a new header name, manufacturer, device type or CPU family, add it to the lists in `patterns.ts`.
+
+## Deployment
+
+The app is a static site. `npm run build` writes the output to `dist/`.
+
+On Render (Static Site):
+
+| Setting           | Value                                    |
+| ----------------- | ---------------------------------------- |
+| Build command     | `npm install && npm run build`           |
+| Publish directory | `dist`                                   |
+| Rewrite rule      | `/*` to `/index.html` (for client routes) |
+
 ## Project structure
 
 ```
@@ -51,6 +76,7 @@ src/
 ├── assets/         Styles and images, with a central index.ts
 ├── common/         Shared pieces (Logo, ScrollToTop)
 ├── components/     UI components (header, footer, home, theme toggle)
+│   └── home/       Hero, dropzone, asset table, column details, content sections
 ├── constants/      App name and shared constants
 ├── layouts/        Page layouts (MasterLayout)
 ├── pages/          Route pages
