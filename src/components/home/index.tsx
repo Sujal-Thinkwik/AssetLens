@@ -33,7 +33,7 @@ const HomeIndex = () => {
             <Card withBorder p="xl" radius="lg">
               <Group justify="space-between" mb="sm">
                 <Title order={3}>Extracted assets</Title>
-                <Text c="dimmed" size="sm">
+                <Text c="dimmed" size="sm" truncate='end'>
                   {fileName} · {result.rows.length} rows · {result.sheets.length} sheet
                   {result.sheets.length === 1 ? '' : 's'}
                 </Text>

@@ -72,7 +72,7 @@ const UploadDropzone = ({ loading, fileName, onDrop, onReject }: Props) => (
       </Group>
 
       {fileName && (
-        <Text size="sm" c="dimmed">
+        <Text size="sm" c="dimmed" maw='100%' truncate='end'>
           Last imported: <Text span fw={600} c="var(--mantine-color-text)">{fileName}</Text>
         </Text>
       )}

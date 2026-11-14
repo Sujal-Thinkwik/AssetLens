@@ -23,10 +23,14 @@ const COLUMNS: DataTableColumn<ColumnDetail>[] = [
       </Badge>
     )
   },
-  { accessor: 'name', title: 'Source column', render: col => <Text size="sm">{col.name}</Text> },
+  { accessor: 'name', title: 'Source column',
+    width: 150,
+    
+    render: col => <Text size="sm">{col.name}</Text> },
   {
     accessor: 'field',
     title: 'Mapped to',
+    width: 150,
     render: col =>
       col.field ? (
         <Badge variant="filled">{fieldLabel(col.field)}</Badge>
@@ -39,6 +43,7 @@ const COLUMNS: DataTableColumn<ColumnDetail>[] = [
   {
     accessor: 'method',
     title: 'Detection',
+    width: 180,
     render: col => {
       const { text, color, hint } = METHOD_META[col.method];
       return (
@@ -53,6 +58,7 @@ const COLUMNS: DataTableColumn<ColumnDetail>[] = [
   {
     accessor: 'samples',
     title: 'Sample values',
+    width: 180,
     render: col => (
       <Text size="sm" c="dimmed" lineClamp={1} title={col.samples.join(' · ')}>
         {col.samples.join(' · ') || '—'}
@@ -68,7 +74,7 @@ const ColumnDetails = ({ sheet }: { sheet: SheetResult }) => {
     <Paper withBorder radius="md" p="md">
       <Stack gap="md">
         <Group gap="xs">
-          <Text fw={600}>{sheet.name}</Text>
+          <Text fw={600} truncate='end'>{sheet.name}</Text>
           <Badge variant="light">{sheet.rowCount} assets</Badge>
           <Badge variant="light" color="gray">
             {sheet.headerRow ? `Header on row ${sheet.headerRow}` : 'No header row detected'}
