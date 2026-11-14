@@ -1,20 +1,13 @@
-import { Group, Text } from '@mantine/core';
+import { Group, Image, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
+import { images } from '@/assets';
+import { APP_NAME } from '@/constants/app';
 
-type LogoProps = {
-  inverted?: boolean;
-};
-
-const Logo = ({ inverted = false }: LogoProps) => (
-  <Group
-    renderRoot={(props) => <Link to="/" {...props} />}
-    gap="xs"
-    wrap="nowrap"
-    td="none"
-    aria-label="CoSpace home"
-  >
-    <Text fw={800} fz="xl" c={inverted ? 'white' : 'var(--mantine-color-text)'} lh={1}>
-      LOGO
+const Logo = () => (
+  <Group renderRoot={props => <Link to="/" {...props} />} gap="xs" wrap="nowrap" td="none" aria-label={`${APP_NAME} home`}>
+    <Image src={images.logoMark} alt="" w={34} h={34} radius="md" />
+    <Text fw={800} fz="xl" lh={1} c="var(--mantine-color-text)" style={{ letterSpacing: '-0.02em' }}>
+      {APP_NAME}
     </Text>
   </Group>
 );
