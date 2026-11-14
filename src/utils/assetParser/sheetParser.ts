@@ -1,114 +1,104 @@
 import * as XLSX from 'xlsx';
 import { DESCRIPTION_HEADER_RE } from './patterns';
-import { dropEmptyFields, fillMissingFields, withUnit } from './extractors';
+import { fillMissingFields, withUnit } from './extractors';
 import { findHeaderRow, matchHeader } from './headers';
 import { inferField } from './inference';
 import { hasContent } from './text';
 import type { AssetField, AssetFields, ColumnDetail, ParseResult, SourceSheet } from './types';
 
-const INFERENCE_SAMPLE_SIZE = 200;
+const INFERENCE_SAMPLE_ROWS = 200;
 const SAMPLE_VALUES_SHOWN = 3;
 
 type ColumnMap = Map<AssetField, ColumnDetail>;
+type ColumnHit = { col: ColumnDetail; field: AssetField; score: number };
 
 interface SheetContext {
   mapped: ColumnMap;
   unmapped: ColumnDetail[];
+  /** Columns scanned for free text: description-like ones when present, else every unmapped one. */
   textColumns: ColumnDetail[];
   hasDescriptionColumns: boolean;
-  headerKey: string[];
 }
 
+const firstValues = (rows: string[][], index: number, limit: number): string[] => {
+  const values: string[] = [];
+  for (const row of rows) {
+    if (row[index]) values.push(row[index]);
+    if (values.length === limit) break;
+  }
+  return values;
+};
+
 /** Lists the non-empty columns, giving unnamed or duplicate headers a unique display name. */
-const buildColumns = (grid: string[][], headerIdx: number, dataRows: string[][], colOffset: number): ColumnDetail[] => {
+const buildColumns = (grid: string[][], headerRow: string[] | undefined, dataRows: string[][], colOffset: number): ColumnDetail[] => {
   const width = grid.reduce((max, row) => Math.max(max, row.length), 0);
-  const used = new Set<string>();
+  const usedNames = new Set<string>();
   const columns: ColumnDetail[] = [];
 
-  for (let c = 0; c < width; c++) {
-    const header = headerIdx >= 0 ? grid[headerIdx][c] ?? '' : '';
-    const values = dataRows.map(r => r[c] ?? '').filter(Boolean);
-    if (!header && !values.length) continue;
+  for (let index = 0; index < width; index++) {
+    const header = headerRow?.[index] ?? '';
+    const samples = firstValues(dataRows, index, SAMPLE_VALUES_SHOWN);
+    if (!header && !samples.length) continue;
 
-    const letter = XLSX.utils.encode_col(colOffset + c);
+    const letter = XLSX.utils.encode_col(colOffset + index);
     let name = header || `Column ${letter}`;
-    if (used.has(name.toLowerCase())) name = `${name} (${letter})`;
-    used.add(name.toLowerCase());
+    if (usedNames.has(name.toLowerCase())) name = `${name} (${letter})`;
+    usedNames.add(name.toLowerCase());
 
-    columns.push({
-      index: c,
-      letter,
-      header,
-      name,
-      field: null,
-      method: 'none',
-      samples: values.slice(0, SAMPLE_VALUES_SHOWN)
-    });
+    columns.push({ index, letter, header, name, field: null, method: 'none', samples });
   }
-
   return columns;
 };
 
-const assign = (mapped: ColumnMap, col: ColumnDetail, field: AssetField, method: 'header' | 'content'): void => {
-  mapped.set(field, col);
-  col.field = field;
-  col.method = method;
-};
-
-const mapByHeader = (columns: ColumnDetail[], mapped: ColumnMap): void => {
-  const scores = new Map<AssetField, number>();
-  const best = new Map<AssetField, ColumnDetail>();
-
-  columns.forEach(col => {
-    const m = col.header ? matchHeader(col.header) : null;
-    if (m && m.score > (scores.get(m.field) ?? -1)) {
-      best.set(m.field, col);
-      scores.set(m.field, m.score);
-    }
-  });
-  best.forEach((col, field) => assign(mapped, col, field, 'header'));
-};
-
-const mapByContent = (columns: ColumnDetail[], dataRows: string[][], mapped: ColumnMap): void => {
-  const candidates: { col: ColumnDetail; field: AssetField; score: number }[] = [];
-
-  columns
-    .filter(col => !col.field)
-    .forEach(col => {
-      const sample = dataRows
-        .slice(0, INFERENCE_SAMPLE_SIZE)
-        .map(r => r[col.index] ?? '')
-        .filter(Boolean);
-      const hit = inferField(sample, new Set(mapped.keys()));
-      if (hit) candidates.push({ col, ...hit });
-    });
-
-  candidates
+/** Gives each field to its best-scoring column, skipping fields that are already mapped. */
+const claimColumns = (mapped: ColumnMap, hits: ColumnHit[], method: 'header' | 'content'): void => {
+  hits
     .sort((a, b) => b.score - a.score)
     .forEach(({ col, field }) => {
-      if (!mapped.has(field) && !col.field) assign(mapped, col, field, 'content');
+      if (mapped.has(field)) return;
+      mapped.set(field, col);
+      col.field = field;
+      col.method = method;
     });
 };
 
-const buildContext = (columns: ColumnDetail[], dataRows: string[][], headerRow: string[] | undefined): SheetContext => {
+const buildContext = (columns: ColumnDetail[], dataRows: string[][]): SheetContext => {
   const mapped: ColumnMap = new Map();
-  mapByHeader(columns, mapped);
-  mapByContent(columns, dataRows, mapped);
+
+  claimColumns(
+    mapped,
+    columns.flatMap(col => {
+      const match = matchHeader(col.header);
+      return match ? [{ col, ...match }] : [];
+    }),
+    'header'
+  );
+
+  const taken = new Set(mapped.keys());
+  const sampleRows = dataRows.slice(0, INFERENCE_SAMPLE_ROWS);
+  claimColumns(
+    mapped,
+    columns
+      .filter(col => !col.field)
+      .flatMap(col => {
+        const hit = inferField(firstValues(sampleRows, col.index, Infinity), taken);
+        return hit ? [{ col, ...hit }] : [];
+      }),
+    'content'
+  );
 
   const unmapped = columns.filter(col => !col.field);
-  const descColumns = unmapped.filter(col => DESCRIPTION_HEADER_RE.test(col.header));
-
+  const descriptive = unmapped.filter(col => DESCRIPTION_HEADER_RE.test(col.header));
   return {
     mapped,
     unmapped,
-    textColumns: descColumns.length ? descColumns : unmapped,
-    hasDescriptionColumns: descColumns.length > 0,
-    headerKey: headerRow ? headerRow.map(c => c.toLowerCase()) : []
+    textColumns: descriptive.length ? descriptive : unmapped,
+    hasDescriptionColumns: descriptive.length > 0
   };
 };
 
 const isRepeatedHeader = (row: string[], headerKey: string[]): boolean =>
-  headerKey.length > 0 && row.filter((cell, i) => cell && cell.toLowerCase() === headerKey[i]).length >= 2;
+  row.filter((cell, i) => cell && cell.toLowerCase() === headerKey[i]).length >= 2;
 
 /** Returns the asset fields for a row, or null when the row holds no asset data. */
 const extractFields = (row: string[], ctx: SheetContext): AssetFields | null => {
@@ -119,30 +109,13 @@ const extractFields = (row: string[], ctx: SheetContext): AssetFields | null => 
   });
 
   const text = ctx.textColumns
-    .map(col => row[col.index] ?? '')
+    .map(col => row[col.index])
     .filter(Boolean)
     .join(' | ');
   const typeText = `${ctx.hasDescriptionColumns ? text : ''} ${fields.model ?? ''}`;
-
   fillMissingFields(fields, text, typeText);
-  dropEmptyFields(fields);
 
   return Object.keys(fields).length ? fields : null;
-};
-
-const extractExtras = (row: string[], ctx: SheetContext): Record<string, string> => {
-  const extras: Record<string, string> = {};
-  ctx.unmapped.forEach(col => {
-    const value = row[col.index];
-    if (value) extras[col.name] = value;
-  });
-  return extras;
-};
-
-const registerExtraColumns = (ctx: SheetContext, extras: Record<string, string>, out: ParseResult): void => {
-  ctx.unmapped.forEach(col => {
-    if (extras[col.name] !== undefined && !out.extraColumns.includes(col.name)) out.extraColumns.push(col.name);
-  });
 };
 
 export const parseSheet = ({ name, grid, rowOffset, colOffset }: SourceSheet, out: ParseResult): void => {
@@ -152,21 +125,31 @@ export const parseSheet = ({ name, grid, rowOffset, colOffset }: SourceSheet, ou
   }
 
   const headerIdx = findHeaderRow(grid);
+  const headerRow = grid[headerIdx] as string[] | undefined;
   const dataStart = headerIdx >= 0 ? headerIdx + 1 : grid.findIndex(hasContent);
-
   const dataRows = grid.slice(dataStart);
-  const columns = buildColumns(grid, headerIdx, dataRows, colOffset);
-  const ctx = buildContext(columns, dataRows, headerIdx >= 0 ? grid[headerIdx] : undefined);
+
+  const columns = buildColumns(grid, headerRow, dataRows, colOffset);
+  const ctx = buildContext(columns, dataRows);
+  const headerKey = headerRow?.map(cell => cell.toLowerCase()) ?? [];
+  const knownExtras = new Set(out.extraColumns);
 
   let rowCount = 0;
   dataRows.forEach((row, k) => {
-    if (!hasContent(row) || isRepeatedHeader(row, ctx.headerKey)) return;
+    if (!hasContent(row) || (headerRow && isRepeatedHeader(row, headerKey))) return;
 
     const fields = extractFields(row, ctx);
     if (!fields) return;
 
-    const extras = extractExtras(row, ctx);
-    registerExtraColumns(ctx, extras, out);
+    const extras: Record<string, string> = {};
+    ctx.unmapped.forEach(col => {
+      if (!row[col.index]) return;
+      extras[col.name] = row[col.index];
+      if (!knownExtras.has(col.name)) {
+        knownExtras.add(col.name);
+        out.extraColumns.push(col.name);
+      }
+    });
 
     const rowNumber = rowOffset + dataStart + k + 1;
     out.rows.push({ id: `${name}-${rowNumber}`, sheet: name, rowNumber, fields, extras });
@@ -175,7 +158,7 @@ export const parseSheet = ({ name, grid, rowOffset, colOffset }: SourceSheet, ou
 
   out.sheets.push({
     name,
-    headerRow: headerIdx >= 0 ? rowOffset + headerIdx + 1 : null,
+    headerRow: headerRow ? rowOffset + headerIdx + 1 : null,
     rowCount,
     columns,
     note: rowCount === 0 ? 'No asset rows recognised in this sheet' : undefined

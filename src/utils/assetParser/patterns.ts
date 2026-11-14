@@ -14,7 +14,6 @@ export const ALIASES: Record<AssetField, string[]> = {
 export const MANUFACTURERS: [string, string][] = [
   ['hewlett packard enterprise', 'HPE'],
   ['hewlett packard', 'HP'],
-  ['hewlett-packard', 'HP'],
   ['hpe', 'HPE'],
   ['hp', 'HP'],
   ['dell', 'Dell'],

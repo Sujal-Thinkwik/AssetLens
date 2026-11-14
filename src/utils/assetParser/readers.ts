@@ -12,26 +12,21 @@ const detectDelimiter = (text: string): string => {
     .split(/\r?\n/)
     .filter(line => line.trim())
     .slice(0, DELIMITER_SAMPLE_LINES);
-  let best = ',';
-  let bestVotes = 0;
-  let bestCount = 0;
 
-  DELIMITERS.forEach(delimiter => {
-    const tally = new Map<number, number>();
-    lines.forEach(line => {
+  let best = { delimiter: ',', votes: 0, count: 0 };
+
+  for (const delimiter of DELIMITERS) {
+    const votesByCount = new Map<number, number>();
+    for (const line of lines) {
       const count = line.split(delimiter).length - 1;
-      if (count > 0) tally.set(count, (tally.get(count) ?? 0) + 1);
-    });
-    tally.forEach((votes, count) => {
-      if (votes > bestVotes || (votes === bestVotes && count > bestCount)) {
-        best = delimiter;
-        bestVotes = votes;
-        bestCount = count;
-      }
-    });
-  });
-
-  return best;
+      if (count) votesByCount.set(count, (votesByCount.get(count) ?? 0) + 1);
+      console.log(votesByCount)
+    }
+    for (const [count, votes] of votesByCount) {
+      if (votes > best.votes || (votes === best.votes && count > best.count)) best = { delimiter, votes, count };
+    }
+  }
+  return best.delimiter;
 };
 
 const readCsv = async (file: File): Promise<SourceSheet[]> => {
@@ -43,6 +38,7 @@ const readCsv = async (file: File): Promise<SourceSheet[]> => {
     delimiter: detectDelimiter(text),
     checkType: false
   }).fromString(text)) as string[][];
+  console.log(rows,[{ name: file.name, grid: rows.map(row => row.map(clean)), rowOffset: 0, colOffset: 0 }])
   return [{ name: file.name, grid: rows.map(row => row.map(clean)), rowOffset: 0, colOffset: 0 }];
 };
 

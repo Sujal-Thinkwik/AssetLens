@@ -3,44 +3,51 @@ import { hasContent, isNumeric, keyOf } from './text';
 import type { AssetField } from './types';
 
 const MAX_HEADER_SCAN_ROWS = 50;
+const MAX_HEADER_LENGTH = 60;
+const MAX_DIGIT_CELL_SHARE = 0.4;
 
-export const matchHeader = (header: string): { field: AssetField; score: number } | null => {
+export interface HeaderMatch {
+  field: AssetField;
+  score: number;
+}
+
+const ALIAS_ENTRIES = (Object.entries(ALIASES) as [AssetField, string[]][]).flatMap(([field, aliases]) =>
+  aliases.map(alias => ({ field, alias }))
+);
+
+/** Scores a header against every alias: an exact match beats a phrase contained in the header. */
+export const matchHeader = (header: string): HeaderMatch | null => {
   const key = keyOf(header);
-  if (!key || header.length > 60) return null;
+  if (!key || header.length > MAX_HEADER_LENGTH) return null;
   const padded = ` ${key} `;
-  let best: { field: AssetField; score: number } | null = null;
+  let best: HeaderMatch | null = null;
 
-  (Object.keys(ALIASES) as AssetField[]).forEach(field => {
-    ALIASES[field].forEach(alias => {
-      let score = 0;
-      if (key === alias) score = 1000 + alias.length;
-      else if (padded.includes(` ${alias} `)) score = alias.length;
-      if (score && (!best || score > best.score)) best = { field, score };
-    });
-  });
-
+  for (const { field, alias } of ALIAS_ENTRIES) {
+    const score = key === alias ? 1000 + alias.length : padded.includes(` ${alias} `) ? alias.length : 0;
+    if (score > (best?.score ?? 0)) best = { field, score };
+  }
   return best;
 };
 
-const hasDataBelow = (grid: string[][], index: number): boolean => grid.slice(index + 1).some(hasContent);
+const lastContentRow = (grid: string[][]): number => {
+  for (let i = grid.length - 1; i >= 0; i--) if (hasContent(grid[i])) return i;
+  return -1;
+};
 
-/** Scores each leading row by how many distinct asset fields its cells look like. */
-const findRecognisedHeader = (grid: string[][]): number => {
+const filled = (row: string[]): string[] => row.filter(Boolean);
+const digitCells = (cells: string[]): number => cells.filter(c => /\d/.test(c)).length;
+
+/** Picks the leading row whose cells match the most distinct asset fields. */
+const findRecognisedHeader = (grid: string[][], lastRow: number): number => {
   let best = -1;
   let bestScore = 0;
-  const limit = Math.min(grid.length, MAX_HEADER_SCAN_ROWS);
 
-  for (let i = 0; i < limit; i++) {
-    const cells = grid[i].filter(Boolean);
-    if (cells.length < 2 || !hasDataBelow(grid, i)) continue;
+  for (let i = 0; i < Math.min(grid.length, MAX_HEADER_SCAN_ROWS) && i < lastRow; i++) {
+    const cells = filled(grid[i]);
     // Data rows are digit-heavy ("512 GB SSD"), header rows are not.
-    if (cells.filter(c => /\d/.test(c)).length / cells.length > 0.4) continue;
+    if (cells.length < 2 || digitCells(cells) / cells.length > MAX_DIGIT_CELL_SHARE) continue;
 
-    const fields = new Set<AssetField>();
-    cells.forEach(cell => {
-      const m = matchHeader(cell);
-      if (m) fields.add(m.field);
-    });
+    const fields = new Set(cells.map(cell => matchHeader(cell)?.field).filter(Boolean));
     if (!fields.size) continue;
 
     const textual = cells.filter(cell => !isNumeric(cell)).length / cells.length;
@@ -50,29 +57,23 @@ const findRecognisedHeader = (grid: string[][]): number => {
       best = i;
     }
   }
-
   return best;
 };
 
-/** No recognisable names: accept the first all-text, unique, digit-free row as a generic header. */
-const findGenericHeader = (grid: string[][]): number => {
-  const limit = Math.min(grid.length, MAX_HEADER_SCAN_ROWS);
+/** No recognisable names: accept the first multi-cell row if it is all unique, short, digit-free text. */
+const findGenericHeader = (grid: string[][], lastRow: number): number => {
+  const i = grid.slice(0, MAX_HEADER_SCAN_ROWS).findIndex(row => filled(row).length >= 2);
+  if (i < 0 || i >= lastRow) return -1;
 
-  for (let i = 0; i < limit; i++) {
-    const cells = grid[i].filter(Boolean);
-    if (cells.length < 2) continue;
-    if (!hasDataBelow(grid, i)) break;
-    const unique = new Set(cells.map(c => c.toLowerCase())).size === cells.length;
-    const digitCells = cells.filter(c => /\d/.test(c)).length;
-    if (unique && digitCells <= 1 && cells.every(c => !isNumeric(c) && c.length < 40)) return i;
-    break;
-  }
-
-  return -1;
+  const cells = filled(grid[i]);
+  const isUnique = new Set(cells.map(c => c.toLowerCase())).size === cells.length;
+  const isPlainText = cells.every(c => !isNumeric(c) && c.length < 40);
+  return isUnique && isPlainText && digitCells(cells) <= 1 ? i : -1;
 };
 
 /** Returns the header row index, or -1 when the sheet has no header. */
 export const findHeaderRow = (grid: string[][]): number => {
-  const recognised = findRecognisedHeader(grid);
-  return recognised >= 0 ? recognised : findGenericHeader(grid);
+  const lastRow = lastContentRow(grid);
+  const recognised = findRecognisedHeader(grid, lastRow);
+  return recognised >= 0 ? recognised : findGenericHeader(grid, lastRow);
 };

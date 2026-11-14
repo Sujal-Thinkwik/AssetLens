@@ -96,6 +96,7 @@ const AssetTable = ({ rows, extraColumns, multipleSheets }: Props) => {
             accessor: extraKey(i),
             title: name,
             sortable: true,
+            width: 200,
             render: record => dash(record[extraKey(i)])
           }))
         : [])
