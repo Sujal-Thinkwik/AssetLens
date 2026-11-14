@@ -9,7 +9,11 @@ const MasterLayout = () => (
   <>
     <ScrollToTop />
     <AppShell header={{ height: 68 }} padding={0}>
-      <AppShell.Header withBorder bg="light-dark(rgba(255, 255, 255, 0.94), rgba(26, 27, 30, 0.94))">
+      <AppShell.Header
+        withBorder
+        bg="color-mix(in srgb, var(--mantine-color-body) 55%, transparent)"
+        style={{ backdropFilter: 'blur(14px) saturate(160%)', WebkitBackdropFilter: 'blur(14px) saturate(160%)' }}
+      >
         <AppHeader />
       </AppShell.Header>
 
