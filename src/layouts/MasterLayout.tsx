@@ -1,66 +1,26 @@
-import { AppShell, Burger, Container, Group } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { AppShell, Container } from '@mantine/core';
 import { Outlet } from 'react-router-dom';
 
 import ScrollToTop from '@/common/ScrollToTop';
-import Logo from '@/common/Logo';
-import WebHeader from '@/components/header/WebHeader';
-import MobileHeader from '@/components/header/MobileHeader';
+import AppHeader from '@/components/header/AppHeader';
 import Footer from '@/components/footer/Footer';
-import ToggleTheme from '@/components/toggle-theme/ToggleTheme';
-import ActionButtons from '@/components/header/ActionButtons';
 
-const MasterLayout = () => {
-  const [opened, { toggle, close }] = useDisclosure(false);
+const MasterLayout = () => (
+  <>
+    <ScrollToTop />
+    <AppShell header={{ height: 68 }} padding={0}>
+      <AppShell.Header withBorder bg="light-dark(rgba(255, 255, 255, 0.94), rgba(26, 27, 30, 0.94))">
+        <AppHeader />
+      </AppShell.Header>
 
-  return (
-    <>
-      <ScrollToTop />
-      <AppShell
-        header={{ height: 76 }}
-        navbar={{
-          width: 300,
-          breakpoint: 'md',
-          collapsed: { desktop: true, mobile: !opened },
-        }}
-        padding={0}
-      >
-        <AppShell.Header
-          withBorder
-          bg="light-dark(rgba(255, 255, 255, 0.94), rgba(26, 27, 30, 0.94))"
-        >
-          <Container size="xl" h="100%">
-            <Group h="100%" justify="space-between" wrap="nowrap">
-              <Logo />
-              <WebHeader />
-              <Group gap="xs" visibleFrom="md" wrap="nowrap">
-                <ActionButtons />
-                <ToggleTheme />
-              </Group>
-              <Burger
-                opened={opened}
-                onClick={toggle}
-                hiddenFrom="md"
-                size="sm"
-                aria-label="Toggle navigation"
-              />
-            </Group>
-          </Container>
-        </AppShell.Header>
-
-        <AppShell.Navbar p="md">
-          <MobileHeader close={close} />
-        </AppShell.Navbar>
-
-        <AppShell.Main>
-          <Container size="xl" py={48}>
-            <Outlet />
-          </Container>
-          <Footer />
-        </AppShell.Main>
-      </AppShell>
-    </>
-  );
-};
+      <AppShell.Main pos="relative" style={{ overflow: 'clip' }}>
+        <Container size="xl" py={{ base: 24, sm: 48 }}>
+          <Outlet />
+        </Container>
+        <Footer />
+      </AppShell.Main>
+    </AppShell>
+  </>
+);
 
 export default MasterLayout;

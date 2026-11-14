@@ -1,0 +1,27 @@
+.themeButton {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.themeButton:hover,
+.themeButton:focus-visible {
+  color: var(--mantine-primary-color-filled);
+  background: light-dark(var(--mantine-color-primary-0), var(--mantine-color-dark-6));
+  border-color: var(--mantine-color-primary-5);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navLink,
+  .themeButton {
+    transition: none;
+  }
+
+  .themeButton:hover,
+  .themeButton:focus-visible {
+    transform: none;
+  }
+}

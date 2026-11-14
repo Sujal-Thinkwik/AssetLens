@@ -1,25 +1,46 @@
-import { Anchor, Box, Container, Divider, Group, Stack, Text } from '@mantine/core';
+import { Box, Container, Divider, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import Logo from '@/common/Logo';
+import { APP_NAME, APP_TAGLINE, FOOTER_COLUMNS } from '@/constants/app';
 
 const Footer = () => (
-  <Box component="footer" bg="dark.9" c="gray.3" py={48}>
+  <Box
+    component="footer"
+    py="xl"
+    pos="relative"
+    style={{ zIndex: 1, borderTop: '1px solid var(--mantine-color-default-border)' }}
+  >
     <Container size="xl">
-      <Group justify="space-between" align="flex-start" gap="xl">
-        <Stack gap="sm" maw={500}>
-          <Box><Logo inverted /></Box>
-          <Text c="gray.5" size="sm" tt="capitalize">
-            lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut laoreet tincidunt, nunc nisl aliquam nunc, eget aliquam nisl nunc eu nunc.
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="xl">
+        <Stack gap="sm">
+          <Logo />
+          <Text c="dimmed" size="sm">
+            {APP_TAGLINE}
           </Text>
         </Stack>
-        <Group gap="xl">
-          <Anchor c="gray.4" href="#about">About</Anchor>
-          <Anchor c="gray.4" href="#contact">Contact</Anchor>
-        </Group>
+
+        {FOOTER_COLUMNS.map(column => (
+          <Stack key={column.title} gap="xs">
+            <Text fw={600} size="sm">
+              {column.title}
+            </Text>
+            {column.items.map(item => (
+              <Text key={item} c="dimmed" size="sm">
+                {item}
+              </Text>
+            ))}
+          </Stack>
+        ))}
+      </SimpleGrid>
+
+      <Divider my="lg" />
+      <Group justify="space-between" gap="xs">
+        <Text c="dimmed" size="xs">
+          © {new Date().getFullYear()} {APP_NAME}. All rights reserved.
+        </Text>
+        <Text c="dimmed" size="xs">
+          Files are processed in your browser and never uploaded.
+        </Text>
       </Group>
-      <Divider color="dark.6" my="xl" />
-      <Text c="gray.6" size="xs">
-        © {new Date().getFullYear()} LOGO. All rights reserved.
-      </Text>
     </Container>
   </Box>
 );

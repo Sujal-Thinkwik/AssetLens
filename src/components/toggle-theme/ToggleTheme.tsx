@@ -1,6 +1,6 @@
 import { ActionIcon, useMantineColorScheme } from '@mantine/core';
 import { FiMoon, FiSun } from 'react-icons/fi';
-import styles from '@/components/header/WebHeader.module.css';
+import styles from '@/components/header/Header.module.css';
 
 const ToggleTheme = () => {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
