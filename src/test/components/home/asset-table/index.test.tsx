@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import { describe, expect, it, vi } from 'vitest';
-import AssetTable from './index';
+import AssetTable from '@/components/home/asset-table';
 import type { AssetRow } from '@/utils/assetParser';
 
 vi.mock('mantine-datatable', () => ({

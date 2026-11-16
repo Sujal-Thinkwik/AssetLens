@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildRecords, filterRecords, sortRecords } from './assetTable.helpers';
+import { buildRecords, filterRecords, sortRecords } from '@/components/home/asset-table/assetTable.helpers';
 import type { AssetRow } from '@/utils/assetParser';
 
 const rows: AssetRow[] = [
