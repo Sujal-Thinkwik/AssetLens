@@ -20,7 +20,6 @@ const detectDelimiter = (text: string): string => {
     for (const line of lines) {
       const count = line.split(delimiter).length - 1;
       if (count) votesByCount.set(count, (votesByCount.get(count) ?? 0) + 1);
-      console.log(votesByCount)
     }
     for (const [count, votes] of votesByCount) {
       if (votes > best.votes || (votes === best.votes && count > best.count)) best = { delimiter, votes, count };
@@ -38,7 +37,6 @@ const readCsv = async (file: File): Promise<SourceSheet[]> => {
     delimiter: detectDelimiter(text),
     checkType: false
   }).fromString(text)) as string[][];
-  console.log(rows,[{ name: file.name, grid: rows.map(row => row.map(clean)), rowOffset: 0, colOffset: 0 }])
   return [{ name: file.name, grid: rows.map(row => row.map(clean)), rowOffset: 0, colOffset: 0 }];
 };
 

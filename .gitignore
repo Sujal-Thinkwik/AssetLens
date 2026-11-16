@@ -26,7 +26,6 @@ dist-ssr
 .env.*
 
 # Misc
-package-lock.json
 pnpm-lock.yaml
 # Build output
 build

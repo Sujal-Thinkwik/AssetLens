@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Text } from '@mantine/core';
 import {
   DataTable,
@@ -32,17 +32,17 @@ const dash = (value: string | number | undefined) =>
     String(value)
   );
 
+const DEFAULT_SORT_STATUS: DataTableSortStatus<TableRecord> = {
+  columnAccessor: 'rowNumber',
+  direction: 'asc'
+};
+
 const AssetTable = ({ rows, extraColumns, multipleSheets }: Props) => {
   const [query, setQuery] = useState('');
   const [showExtras, setShowExtras] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [sortStatus, setSortStatus] = useState<
-    DataTableSortStatus<TableRecord>
-  >({
-    columnAccessor: 'rowNumber',
-    direction: 'asc'
-  });
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<TableRecord>>(DEFAULT_SORT_STATUS);
 
   const records = useMemo(
     () => buildRecords(rows, extraColumns),
@@ -63,6 +63,16 @@ const AssetTable = ({ rows, extraColumns, multipleSheets }: Props) => {
     () => visible.slice((page - 1) * pageSize, page * pageSize),
     [visible, page, pageSize]
   );
+
+  useEffect(() => {
+    setPage(1);
+    setSortStatus(DEFAULT_SORT_STATUS);
+  }, [rows]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(visible.length / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [page, pageSize, visible.length]);
 
   const columns = useMemo<DataTableColumn<TableRecord>[]>(
     () => [

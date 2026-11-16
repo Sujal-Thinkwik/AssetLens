@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import type { FileRejection } from '@mantine/dropzone';
-import { ParseResult, parseSheets, readFileSheets } from '@/utils/assetParser';
+import { parseSheets, readFileSheets } from '@/utils/assetParser';
+import type { ParseResult } from '@/utils/assetParser';
 
 export const useAssetImport = () => {
   const [loading, setLoading] = useState(false);
